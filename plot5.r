@@ -1,33 +1,56 @@
-## This first line will likely take a few seconds. Be patient!
-if(!exists("NEI")){
-  NEI <- readRDS("./data/summarySCC_PM25.rds")
+## GOAL:: How have emissions from motor vehicle sources changed from 1999-2008 in Baltimore City?
+
+
+## read in the data
+if (!exists("NEI")) {
+      NEI <- readRDS("summarySCC_PM25.rds")
 }
-if(!exists("SCC")){
-  SCC <- readRDS("./data/Source_Classification_Code.rds")
+# dim(NEI)
+# str(NEI)
+# summary(NEI)
+
+if (!exists("SCC")) {
+      SCC <- readRDS("Source_Classification_Code.rds")
 }
-# merge the two data sets 
-if(!exists("NEISCC")){
-  NEISCC <- merge(NEI, SCC, by="SCC")
+# dim(SCC)
+# str(SCC)
+# summary(SCC)
+
+if (!exists("fullData")) {
+      fullData <- merge(NEI, SCC, by = "SCC")
 }
 
+# 24510 corresponds to Baltimoe City in fips column
+# motor-vehical corresponds to ON-ROAD in type column
+
+OnRoadEmissions <-
+      fullData[fullData$fips == "24510" & fullData$type == "ON-ROAD",]
+# dim(OnRoadEmissions)
+
+# creating a contigency table for summing up emissions by years
+OnRoad_byYear <- aggregate(Emissions ~ year , OnRoadEmissions, sum)
+OnRoad_byYear
+
+
+# ggplot2 plot
+if (!require(ggplot2)) {
+      install.packages("ggplot2")
+      
+      require(ggplot2)
+}
 library(ggplot2)
 
-# How have emissions from motor vehicle sources changed from 1999-2008 in Baltimore City?
 
-# 24510 is Baltimore, see plot2.R
-# Searching for ON-ROAD type in NEI
-# Don't actually know it this is the intention, but searching for 'motor' in SCC only gave a subset (non-cars)
-subsetNEI <- NEI[NEI$fips=="24510" & NEI$type=="ON-ROAD",  ]
-
-aggregatedTotalByYear <- aggregate(Emissions ~ year, subsetNEI, sum)
+dev.cur()
+png("Plot5.png",
+    width = 750,
+    height = 500,
+    units = "px")
 
 
+ggplot(OnRoad_byYear, aes(x = factor(year), y = Emissions)) +
+      geom_bar(stat = "identity", fill = "steelblue3", width = 0.25) +
+      xlab("year") + ylab(expression('Total PM'[2.5] * " Emissions")) +
+      ggtitle(expression("Baltimore City On-Road Vehical PM"[2.5] * " Emissions from 1999-2008"))
 
-png("plot5.png", width=840, height=480)
-g <- ggplot(aggregatedTotalByYear, aes(factor(year), Emissions))
-g <- g + geom_bar(stat="identity") +
-  xlab("year") +
-  ylab(expression('Total PM'[2.5]*" Emissions")) +
-  ggtitle('Total Emissions from motor vehicle (type = ON-ROAD) in Baltimore City, Maryland (fips = "24510") from 1999 to 2008')
-print(g)
 dev.off()
