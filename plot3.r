@@ -1,5 +1,3 @@
-## Ashish Sahu
-
 ## GOAL:: sources indicated by the type (point, nonpoint, onroad, nonroad) variable, 
           #which of these four sources have seen decreases in emissions from 1999-2008 for Baltimore City? 
 ## GOAL:: Which have seen increases in emissions from 1999-2008? Plot Using ggpplot2.
