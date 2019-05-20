@@ -1,18 +1,18 @@
-library("data.table")
-path <- getwd()
-download.file(url = "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
-              , destfile = paste(path, "dataFiles.zip", sep = "/"))
-unzip(zipfile = "dataFiles.zip")
+## This first line will likely take a few seconds. Be patient!
+if(!exists("NEI")){
+  NEI <- readRDS("./data/summarySCC_PM25.rds")
+}
+if(!exists("SCC")){
+  SCC <- readRDS("./data/Source_Classification_Code.rds")
+}
 
-SCC <- data.table::as.data.table(x = readRDS(file = "Source_Classification_Code.rds"))
-NEI <- data.table::as.data.table(x = readRDS(file = "summarySCC_PM25.rds"))
+# Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips == "24510") from 1999 to 2008? 
+# Use the base plotting system to make a plot answering this question.
 
-# Prevents histogram from printing in scientific notation
-NEI[, Emissions := lapply(.SD, as.numeric), .SDcols = c("Emissions")]
+subsetNEI  <- NEI[NEI$fips=="24510", ]
 
-totalNEI <- NEI[, lapply(.SD, sum, na.rm = TRUE), .SDcols = c("Emissions"), by = year]
+aggregatedTotalByYear <- aggregate(Emissions ~ year, subsetNEI, sum)
 
-barplot(totalNEI[, Emissions]
-        , names = totalNEI[, year]
-        , xlab = "Years", ylab = "Emissions"
-        , main = "Emissions over the Years")
+png('plot2.png')
+barplot(height=aggregatedTotalByYear$Emissions, names.arg=aggregatedTotalByYear$year, xlab="years", ylab=expression('total PM'[2.5]*' emission'),main=expression('Total PM'[2.5]*' in the Baltimore City, MD emissions at various years'))
+dev.off()
